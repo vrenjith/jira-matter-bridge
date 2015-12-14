@@ -119,7 +119,7 @@ router.post('/hooks/:hookid?', function(req, res, next) {
 
     if(comment)
     {
-        postContent += "\r\n" + doConversion(comment.body);
+        postContent += "\r\n##### Comment:\r\n" + doConversion(comment.body);
     }
 
     //console.log(postContent);
