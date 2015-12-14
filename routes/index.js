@@ -2,6 +2,8 @@ var express = require('express');
 var router = express.Router();
 var proto = require('https');
 var querystring = require('querystring');
+var escape = require("markdown-escape");
+
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
@@ -16,11 +18,20 @@ function toTitleCase(str) {
     });
 }
 
+function doConversion(str)
+{
+	//had to write a custom parser since none of the existing ones
+	//did do the job correctly viz, querystring and markdown-escape
+	//str.replace(/;/g,"\;");
+
+	return str;
+}
+
 function postToServer(postContent, hookid) {
     console.log("Informing mattermost channel: " + hookid);
 	process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
-	var postData = 'payload={"text": ' + JSON.stringify(postContent) + '}';
+	var postData = '{"text": ' + JSON.stringify(postContent) + '}';
 	//console.log(postData);
     var post_options = {
         host: 'ariba-mattermost.mo.sap.corp',
@@ -31,7 +42,7 @@ function postToServer(postContent, hookid) {
         path: '/t4v4lit4',*/
         method: 'POST',
         headers: {
-	        'Content-Type': 'application/x-www-form-urlencoded',
+	        'Content-Type': 'application/json',
 	        'Content-Length': Buffer.byteLength(postData)
     	}
     };
@@ -83,18 +94,18 @@ router.post('/hooks/:hookid?', function(req, res, next) {
 	            if(!fieldValue){
 	            	fieldValue = "-Cleared-";
 	            }
-	            postContent += "| " + toTitleCase(querystring.escape(fieldName)) + " | " + querystring.escape(fieldValue) + " |\r\n";
+	            postContent += "| " + toTitleCase(doConversion(fieldName)) + " | " + doConversion(fieldValue) + " |\r\n";
 	        }
 	    }
 	    else if(comment)
 	    {
 	    	var postContent = "##### " + displayName + " added a comment to [" + issueID + "](" + issueUrl +
-	            "): " + querystring.escape(summary) + "\r\n_" + querystring.escape(comment.body) + "_";
+	            "): " + doConversion(summary) + "\r\n" + doConversion(comment.body);
 	    }
 	    else
 	    {
 	    	console.log("This is not supposed to happen");
-	    }
+	    }	
 
         //console.log(postContent);
 
