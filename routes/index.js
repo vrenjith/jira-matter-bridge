@@ -1,6 +1,7 @@
 var express = require('express');
 var router = express.Router();
 var proto = require('https');
+var querystring = require('querystring');
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
@@ -16,17 +17,18 @@ function toTitleCase(str) {
 }
 
 function postToServer(postContent, hookid) {
+    console.log("Informing mattermost channel: " + hookid);
 	process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
 	var postData = 'payload={"text": ' + JSON.stringify(postContent) + '}';
-	console.log(postData);
+	//console.log(postData);
     var post_options = {
         host: 'ariba-mattermost.mo.sap.corp',
         port: '443',
         path: '/hooks/' + hookid,
-        //host: 'requestb.in',
-        //port: '80',
-        //path: '/t4v4lit4',
+        /*host: 'requestb.in',
+       	port: '80',
+        path: '/t4v4lit4',*/
         method: 'POST',
         headers: {
 	        'Content-Type': 'application/x-www-form-urlencoded',
@@ -50,6 +52,7 @@ function postToServer(postContent, hookid) {
 
 router.post('/hooks/:hookid?', function(req, res, next) {
     //console.log(req.body);	
+    console.log("Received update from JIRA");
     var hookId = req.params.hookid;
     var webevent = req.body.webhookEvent;
     if (webevent == "jira:issue_updated") {
@@ -62,22 +65,38 @@ router.post('/hooks/:hookid?', function(req, res, next) {
 
         var displayName = req.body.user.displayName;
         var avatar = req.body.user.avatarUrls["16x16"];
-        var changedItems = req.body.changelog.items;
-        var postContent = "##### " + displayName + " updated [" + issueID + "](" + issueUrl +
-            ") " + summary + "\r\n| Field | Updated Value |\r\n|:----- |:-------------|\r\n";
+        var changeLog = req.body.changelog;
+        var comment = req.body.comment;
+
+        if(changeLog)
+		{
+			var changedItems = req.body.changelog.items;
+
+	        var postContent = "##### " + displayName + " updated [" + issueID + "](" + issueUrl +
+	            "): " + summary + "\r\n| Field | Updated Value |\r\n|:----- |:-------------|\r\n";
 
 
-        for (i = 0; i < changedItems.length; i++) {
-            var item = changedItems[i];
-            var fieldName = item.field;
-            var fieldValue = item.toString;
-            if(!fieldValue){
-            	fieldValue = "-Cleared-";
-            }
-            postContent += "| " + toTitleCase(fieldName) + " | " + fieldValue + " |\r\n";
-        }
+	        for (i = 0; i < changedItems.length; i++) {
+	            var item = changedItems[i];
+	            var fieldName = item.field;
+	            var fieldValue = item.toString;
+	            if(!fieldValue){
+	            	fieldValue = "-Cleared-";
+	            }
+	            postContent += "| " + toTitleCase(querystring.escape(fieldName)) + " | " + querystring.escape(fieldValue) + " |\r\n";
+	        }
+	    }
+	    else if(comment)
+	    {
+	    	var postContent = "##### " + displayName + " added a comment to [" + issueID + "](" + issueUrl +
+	            "): " + querystring.escape(summary) + "\r\n_" + querystring.escape(comment.body) + "_";
+	    }
+	    else
+	    {
+	    	console.log("This is not supposed to happen");
+	    }
 
-        console.log(postContent);
+        //console.log(postContent);
 
         postToServer(postContent, hookId);
     } else {
