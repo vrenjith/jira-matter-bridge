@@ -79,12 +79,12 @@ router.post('/hooks/:hookid?', function(req, res, next) {
         var changeLog = req.body.changelog;
         var comment = req.body.comment;
 
+        var postContent = "##### " + displayName + " updated [" + issueID + "](" + issueUrl + "): " + summary;
         if(changeLog)
 		{
 			var changedItems = req.body.changelog.items;
 
-	        var postContent = "##### " + displayName + " updated [" + issueID + "](" + issueUrl +
-	            "): " + summary + "\r\n| Field | Updated Value |\r\n|:----- |:-------------|\r\n";
+	        postContent += "\r\n| Field | Updated Value |\r\n|:----- |:-------------|\r\n";
 
 
 	        for (i = 0; i < changedItems.length; i++) {
@@ -97,10 +97,9 @@ router.post('/hooks/:hookid?', function(req, res, next) {
 	            postContent += "| " + toTitleCase(doConversion(fieldName)) + " | " + doConversion(fieldValue) + " |\r\n";
 	        }
 	    }
-	    else if(comment)
+	    if(comment)
 	    {
-	    	var postContent = "##### " + displayName + " added a comment to [" + issueID + "](" + issueUrl +
-	            "): " + doConversion(summary) + "\r\n" + doConversion(comment.body);
+	    	postContent += "\r\n" + doConversion(comment.body);
 	    }
 	    else
 	    {
