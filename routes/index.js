@@ -29,14 +29,17 @@ function postToServer(postContent, hookid) {
     var postData = '{"text": ' + JSON.stringify(postContent) + '}';
     var post_options = {
         host: process.env.MATTERMOST_SERVER || 'localhost',
-        port: process.env.MATTERMOST_SERVER_PORT || '443',
-        path: '/hooks/' + hookid,
+        port: process.env.MATTERMOST_SERVER_PORT || '80',
+        path: process.env.MATTERMOST_SERVER_PATH || '/hooks/' + hookid,
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'Content-Length': Buffer.byteLength(postData)
         }
     };
+    
+    console.log(post_options);
+
     var proto;
     if(process.env.MATTERMOST_SERVER_PROTO == 'https')
     {
@@ -61,14 +64,22 @@ function postToServer(postContent, hookid) {
 
 }
 
+//Dummy path for testing the integration
+router.post('/sink/:hookid?', function(req, res, next) {
+    console.log(req.params.hookid);
+    console.log(req.body);
+    res.render(req.body);
+});
+
 router.get('/hooks/:hookid?', function(req, res, next) {
     res.render('index', {
         title: 'JIRA Mattermost Bridge - You got it right'
-        });
     });
+});
 
 router.post('/hooks/:hookid?', function(req, res, next) {
-    //console.log(req.body);    
+    console.log(req.body);
+    
     console.log("Received update from JIRA");
     var hookId = req.params.hookid;
     var webevent = req.body.webhookEvent;
