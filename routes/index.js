@@ -1,15 +1,9 @@
 var express = require('express');
 var router = express.Router();
 var https = require('https');
-var http = require('https');
+var http = require('http');
 var toMarkdown = require('to-markdown');
 
-
-router.get('/', function(req, res, next) {
-    res.render('index', {
-        title: 'JIRA Mattermost Bridge'
-    });
-});
 
 function toTitleCase(str) {
     return str.replace(/\w\S*/g, function(txt) {
@@ -43,10 +37,12 @@ function postToServer(postContent, hookid) {
     var proto;
     if(process.env.MATTERMOST_SERVER_PROTO == 'https')
     {
+        console.log("Using https protocol");
         proto = https;
     }
     else
     {
+        console.log("Using http protocol");
         proto = http;
     }
 
@@ -64,20 +60,19 @@ function postToServer(postContent, hookid) {
 
 }
 
-//Dummy path for testing the integration
-router.post('/sink/:hookid?', function(req, res, next) {
-    console.log(req.params.hookid);
-    console.log(req.body);
-    res.render(req.body);
+router.get('/', function(req, res, next) {
+    res.render('index', {
+        title: 'JIRA Mattermost Bridge'
+    });
 });
 
-router.get('/hooks/:hookid?', function(req, res, next) {
+router.get('/hooks/:hookid', function(req, res, next) {
     res.render('index', {
         title: 'JIRA Mattermost Bridge - You got it right'
     });
 });
 
-router.post('/hooks/:hookid?', function(req, res, next) {
+router.post('/hooks/:hookid', function(req, res, next) {
     console.log(req.body);
     
     console.log("Received update from JIRA");
