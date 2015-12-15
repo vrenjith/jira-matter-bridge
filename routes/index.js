@@ -1,11 +1,10 @@
 var express = require('express');
 var router = express.Router();
-var proto = require('https');
-var querystring = require('querystring');
+var https = require('https');
+var http = require('https');
 var toMarkdown = require('to-markdown');
 
 
-/* GET home page. */
 router.get('/', function(req, res, next) {
     res.render('index', {
         title: 'JIRA Mattermost Bridge'
@@ -28,20 +27,25 @@ function postToServer(postContent, hookid) {
     process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
     var postData = '{"text": ' + JSON.stringify(postContent) + '}';
-    //console.log(postData);
     var post_options = {
-        host: 'ariba-mattermost.mo.sap.corp',
-        port: '443',
+        host: process.env.MATTERMOST_SERVER || 'localhost',
+        port: process.env.MATTERMOST_SERVER_PORT || '443',
         path: '/hooks/' + hookid,
-        /*host: 'requestb.in',
-        port: '80',
-        path: '/t4v4lit4',*/
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'Content-Length': Buffer.byteLength(postData)
         }
     };
+    var proto;
+    if(process.env.MATTERMOST_SERVER_PROTO == 'https')
+    {
+        proto = https;
+    }
+    else
+    {
+        proto = http;
+    }
 
     // Set up the request
     var post_req = proto.request(post_options, function(res) {
@@ -96,7 +100,7 @@ router.post('/hooks/:hookid?', function(req, res, next) {
     }
     else
     {
-        console.log("Ignoring non-update events");
+        console.log("Ignoring events which we don't understand");
         return;
     }
 
@@ -122,14 +126,11 @@ router.post('/hooks/:hookid?', function(req, res, next) {
         postContent += "\r\n##### Comment:\r\n" + doConversion(comment.body);
     }
 
-    //console.log(postContent);
-
     postToServer(postContent, hookId);
 
     res.render('index', {
-        title: 'JIRA Mattermost Bridge'
+        title: 'JIRA Mattermost Bridge - beauty, posted to JIRA'
     });
-
 });
 
 
