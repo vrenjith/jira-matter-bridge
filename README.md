@@ -14,3 +14,16 @@ Set the following environment variables to provide the Mattermost server details
 * Configure Mattermost server and create a new [incoming webhooks](https://github.com/mattermost/platform/blob/master/doc/integrations/webhooks/Incoming-Webhooks.md) and note the hook-id (the part that appears after `hooks` in the hook URL.
 * Configure JIRA Webhooks to forward the hook (for the required JQL) to `http://<jira-matter-bridge-server>:3000/hooks/<mattermost hook id>`
 * That's it.
+
+## Hosted Version
+
+* The app is hosted on a free dyno at https://jira-matter-bridge.herokuapp.com/
+* If the Mattermost server and JIRA server are on public domain, you can directly use this hosted version.
+* In the JIRA Server, configure the webhook URL as given in this example
+ * `https://jira-matter-bridge.herokuapp.com/hooks/<hookid from your mattermost server>?matterurl=<your mattermost server base url>`
+* E.g.:
+ * `https://jira-matter-bridge.herokuapp.com/hooks/ckshz5joqigkfmj6po7fm4r8wh?matterurl=https://someserver.com`
+ * `https://jira-matter-bridge.herokuapp.com/hooks/ckshz5joqigkfmj6po7fm4r8wh?matterurl=http://someserver.com:3000`
+ * `https://jira-matter-bridge.herokuapp.com/hooks/ckshz5joqigkfmj6po7fm4r8wh?matterurl=https://someserver.com:8443`
+
+:warning: Since this is hosted on a free dyno, there is no guarantee that the messages will be delivered and it is recommended that you used a paid dyno at [Heroku](https://dashboard.heroku.com/new) using this repository as source.
