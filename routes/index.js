@@ -24,6 +24,7 @@ function postToServer(postContent, hookid, matterUrl) {
     var matterServer = process.env.MATTERMOST_SERVER || 'localhost';
     var matterServerPort = process.env.MATTERMOST_SERVER_PORT;
     var matterProto = process.env.MATTERMOST_SERVER_PROTO || 'http';
+    var matterPath = process.env.MATTERMOST_SERVER_PATH || '/hooks/' + hookid;
 
     if(matterUrl)
     {
@@ -31,8 +32,9 @@ function postToServer(postContent, hookid, matterUrl) {
         {
             var murl = url.parse(matterUrl);
             matterServer = murl.hostname || matterServer;
-            matterProto = murl.protocol.replace(":","") || matterProto;
             matterServerPort = murl.port || matterServerPort;
+            matterProto = murl.protocol.replace(":","") || matterProto;
+            matterPath = murl.pathname || matterPath;
         }
         catch(err){console.log(err)}
     }
@@ -54,7 +56,7 @@ function postToServer(postContent, hookid, matterUrl) {
     var post_options = {
         host: matterServer,
         port: matterServerPort,
-        path: process.env.MATTERMOST_SERVER_PATH || '/hooks/' + hookid,
+        path: matterPath,
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
