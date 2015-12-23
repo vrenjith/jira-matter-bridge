@@ -3,6 +3,7 @@ var router = express.Router();
 var https = require('https');
 var http = require('http');
 var toMarkdown = require('to-markdown');
+var url = require('url');
 
 
 function toTitleCase(str) {
@@ -16,14 +17,32 @@ function doConversion(str)
     return toMarkdown(str);
 }
 
-function postToServer(postContent, hookid) {
+function postToServer(postContent, hookid, matterUrl) {
     console.log("Informing mattermost channel: " + hookid);
     process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
+    var matterServer = process.env.MATTERMOST_SERVER || 'localhost';
+    var matterServerPort = process.env.MATTERMOST_SERVER_PORT || '80';
+    var matterProto = process.env.MATTERMOST_SERVER_PROTO || 'http';
+
+    if(matterUrl)
+    {
+        try
+        {
+            var murl = url.parse(matterUrl);
+            matterServer = murl.hostname || matterServer;
+            matterServerPort = murl.port || matterServerPort;
+            matterProto = murl.protocol.replace(":","") || matterProto;
+
+            console.log(matterServer + "-" + matterServerPort  + "-" + matterProto);
+        }
+        catch(err){console.log(err)}
+    }
+
     var postData = '{"text": ' + JSON.stringify(postContent) + '}';
     var post_options = {
-        host: process.env.MATTERMOST_SERVER || 'localhost',
-        port: process.env.MATTERMOST_SERVER_PORT || '80',
+        host: matterServer,
+        port: matterServerPort,
         path: process.env.MATTERMOST_SERVER_PATH || '/hooks/' + hookid,
         method: 'POST',
         headers: {
@@ -35,7 +54,7 @@ function postToServer(postContent, hookid) {
     console.log(post_options);
 
     var proto;
-    if(process.env.MATTERMOST_SERVER_PROTO == 'https')
+    if(matterProto == 'https')
     {
         console.log("Using https protocol");
         proto = https;
@@ -46,18 +65,27 @@ function postToServer(postContent, hookid) {
         proto = http;
     }
 
-    // Set up the request
-    var post_req = proto.request(post_options, function(res) {
-        res.setEncoding('utf8');
-        res.on('data', function(chunk) {
-            console.log('Response: ' + chunk);
+    try
+    {
+        // Set up the request
+        var post_req = proto.request(post_options, function(res) {
+            res.setEncoding('utf8');
+            res.on('data', function(chunk) {
+                console.log('Response: ' + chunk);
+            });
+            res.on('error', function(err) {
+                console.log('Error: ' + err);
+            });
         });
-    });
 
-    // post the data
-    post_req.write(postData);
-    post_req.end();
-
+        // post the data
+        post_req.write(postData);
+        post_req.end();
+    }
+    catch(err)
+    {
+        console.log("Unable to reach mattermost server: " + err);
+    }
 }
 
 router.get('/', function(req, res, next) {
@@ -73,8 +101,6 @@ router.get('/hooks/:hookid', function(req, res, next) {
 });
 
 router.post('/hooks/:hookid', function(req, res, next) {
-    console.log(req.body);
-    
     console.log("Received update from JIRA");
     var hookId = req.params.hookid;
     var webevent = req.body.webhookEvent;
@@ -84,6 +110,8 @@ router.post('/hooks/:hookid', function(req, res, next) {
     var matches = regExp.exec(issueRestUrl);
     var issueUrl = matches[1] + "/browse/" + issueID;
     var summary = req.body.issue.fields.summary;
+
+    var matterUrl = req.query.matterurl;
 
     var displayName = req.body.user.displayName;
     var avatar = req.body.user.avatarUrls["16x16"];
@@ -132,7 +160,7 @@ router.post('/hooks/:hookid', function(req, res, next) {
         postContent += "\r\n##### Comment:\r\n" + doConversion(comment.body);
     }
 
-    postToServer(postContent, hookId);
+    postToServer(postContent, hookId, matterUrl);
 
     res.render('index', {
         title: 'JIRA Mattermost Bridge - beauty, posted to JIRA'

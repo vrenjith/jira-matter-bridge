@@ -21,6 +21,10 @@ app.set('port', port);
 
 var server = http.createServer(app);
 
+process.on('uncaughtException', function(err) {
+  console.log('Caught exception: ' + err);
+});
+
 /**
  * Listen on provided port, on all network interfaces.
  */
