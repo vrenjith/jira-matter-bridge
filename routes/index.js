@@ -22,7 +22,7 @@ function postToServer(postContent, hookid, matterUrl) {
     process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
     var matterServer = process.env.MATTERMOST_SERVER || 'localhost';
-    var matterServerPort = process.env.MATTERMOST_SERVER_PORT || '80';
+    var matterServerPort = process.env.MATTERMOST_SERVER_PORT;
     var matterProto = process.env.MATTERMOST_SERVER_PROTO || 'http';
 
     if(matterUrl)
@@ -31,13 +31,24 @@ function postToServer(postContent, hookid, matterUrl) {
         {
             var murl = url.parse(matterUrl);
             matterServer = murl.hostname || matterServer;
-            matterServerPort = murl.port || matterServerPort;
             matterProto = murl.protocol.replace(":","") || matterProto;
-
-            console.log(matterServer + "-" + matterServerPort  + "-" + matterProto);
+            matterServerPort = murl.port || matterServerPort;
         }
         catch(err){console.log(err)}
     }
+    //If the port is not initialized yet (neither from env, nor from query param)
+    // use the defaults ports
+    if(!matterServerPort && matterProto == 'https')
+    {
+        matterServerPort = '443';
+    }
+    else
+    {
+        matterServerPort = '80';
+    }
+
+    console.log(matterServer + "-" + matterServerPort  + "-" + matterProto);
+
 
     var postData = '{"text": ' + JSON.stringify(postContent) + '}';
     var post_options = {
