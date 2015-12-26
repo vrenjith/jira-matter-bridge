@@ -1,0 +1,7 @@
+{
+  "name": "JIRA Mattermost Bridge",
+  "description": "Serves as a bridge that translates the JIRA webhooks into Mattermost webhooks.",
+  "repository": "https://github.com/vrenjith/jira-matter-bridge",
+  "logo": "https://design.atlassian.com/images/brand/logo-25.png",
+  "keywords": ["mattermost", "jira"]
+}
