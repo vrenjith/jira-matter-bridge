@@ -28,4 +28,4 @@ Set the following environment variables to provide the Mattermost server details
 
 :warning: Since this is hosted on a free dyno, there is no guarantee that the messages will be delivered and it is recommended that you use a paid dyno at [Heroku](https://dashboard.heroku.com/new) using this repository as source.
 
-[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/vrenjith/jira-matter-bridge)
