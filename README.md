@@ -26,4 +26,6 @@ Set the following environment variables to provide the Mattermost server details
  * `https://jira-matter-bridge.herokuapp.com/hooks/ckshz5joqigkfmj6po7fm4r8wh?matterurl=http://someserver.com:3000`
  * `https://jira-matter-bridge.herokuapp.com/hooks/ckshz5joqigkfmj6po7fm4r8wh?matterurl=https://someserver.com:8443`
 
-:warning: Since this is hosted on a free dyno, there is no guarantee that the messages will be delivered and it is recommended that you used a paid dyno at [Heroku](https://dashboard.heroku.com/new) using this repository as source.
+:warning: Since this is hosted on a free dyno, there is no guarantee that the messages will be delivered and it is recommended that you use a paid dyno at [Heroku](https://dashboard.heroku.com/new) using this repository as source.
+
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
