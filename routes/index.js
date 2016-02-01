@@ -24,7 +24,7 @@ function postToServer(postContent, hookid, matterUrl) {
     var matterServer = process.env.MATTERMOST_SERVER || 'localhost';
     var matterServerPort = process.env.MATTERMOST_SERVER_PORT;
     var matterProto = process.env.MATTERMOST_SERVER_PROTO || 'http';
-    var matterPath = process.env.MATTERMOST_SERVER_PATH || '/hooks/' + hookid;
+    var matterPath = (process.env.MATTERMOST_SERVER_PATH || '/hooks/') + hookid;
 
     if(matterUrl)
     {
@@ -40,13 +40,15 @@ function postToServer(postContent, hookid, matterUrl) {
     }
     //If the port is not initialized yet (neither from env, nor from query param)
     // use the defaults ports
-    if(!matterServerPort && matterProto == 'https')
-    {
-        matterServerPort = '443';
-    }
-    else
-    {
-        matterServerPort = '80';
+    if(!matterServerPort) {
+        if (matterProto == 'https')
+        {
+            matterServerPort = '443';
+        }
+        else
+        {
+            matterServerPort = '80';
+        }
     }
 
     console.log(matterServer + "-" + matterServerPort  + "-" + matterProto);
