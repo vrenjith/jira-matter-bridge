@@ -25,6 +25,8 @@ function postToServer(postContent, hookid, matterUrl) {
     var matterServerPort = process.env.MATTERMOST_SERVER_PORT;
     var matterProto = process.env.MATTERMOST_SERVER_PROTO || 'http';
     var matterPath = process.env.MATTERMOST_SERVER_PATH || '/hooks/' + hookid;
+    var matterUsername = process.env.MATTERMOST_USERNAME || 'JIRA';
+    var matterIconUrl = process.env.MATTERMOST_ICON_URL || 'https://design.atlassian.com/images/logo/favicon.png';
 
     if(matterUrl)
     {
@@ -55,7 +57,7 @@ function postToServer(postContent, hookid, matterUrl) {
     console.log(matterServer + "-" + matterServerPort  + "-" + matterProto);
 
 
-    var postData = '{"text": ' + JSON.stringify(postContent) + '}';
+    var postData = '{"text": ' + JSON.stringify(postContent) + ', "username": "' + matterUsername + '", "icon_url": "' + matterIconUrl + '"}';
     var post_options = {
         host: matterServer,
         port: matterServerPort,
