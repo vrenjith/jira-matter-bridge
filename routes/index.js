@@ -40,13 +40,16 @@ function postToServer(postContent, hookid, matterUrl) {
     }
     //If the port is not initialized yet (neither from env, nor from query param)
     // use the defaults ports
-    if(!matterServerPort && matterProto == 'https')
+    if(!matterServerPort)
     {
-        matterServerPort = '443';
-    }
-    else
-    {
-        matterServerPort = '80';
+        if (matterProto == 'https')
+        {
+            matterServerPort = '443';
+        }
+        else
+        {
+            matterServerPort = '80';
+        }
     }
 
     console.log(matterServer + "-" + matterServerPort  + "-" + matterProto);
