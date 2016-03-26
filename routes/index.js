@@ -4,7 +4,8 @@ var https = require('https');
 var http = require('http');
 var toMarkdown = require('to-markdown');
 var url = require('url');
-
+var HttpsProxyAgent = require('https-proxy-agent');
+var HttpProxyAgent = require('http-proxy-agent');
 
 function toTitleCase(str) {
     return str.replace(/\w\S*/g, function(txt) {
@@ -20,6 +21,20 @@ function doConversion(str)
 function postToServer(postContent, hookid, matterUrl) {
     console.log("Informing mattermost channel: " + hookid);
     process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+
+    var agent, httpsagent, httpagent = null;
+    var https_proxy = process.env.HTTPS_PROXY || process.env.https_proxy;
+    var http_proxy = process.env.HTTP_PROXY || process.env.http_proxy;
+    if(https_proxy)
+    {
+        httpsagent = new HttpsProxyAgent(https_proxy);
+        console.log("Using HTTPS proxy - " + https_proxy);
+    }
+    if(http_proxy)
+    {
+        httpagent = new HttpProxyAgent(http_proxy);
+        console.log("Using HTTP proxy - " + http_proxy);
+    }
 
     var matterServer = process.env.MATTERMOST_SERVER || 'localhost';
     var matterServerPort = process.env.MATTERMOST_SERVER_PORT;
@@ -53,16 +68,30 @@ function postToServer(postContent, hookid, matterUrl) {
             matterServerPort = '80';
         }
     }
-
     console.log(matterServer + "-" + matterServerPort  + "-" + matterProto);
-
+    var proto;
+    if(matterProto == 'https')
+    {
+        console.log("Using https protocol");
+        proto = https;
+        agent = httpsagent;
+    }
+    else
+    {
+        console.log("Using http protocol");
+        proto = http;
+        agent = httpagent;
+    }
 
     var postData = '{"text": ' + JSON.stringify(postContent) + ', "username": "' + matterUsername + '", "icon_url": "' + matterIconUrl + '"}';
+    console.log(postData);
+    
     var post_options = {
         host: matterServer,
         port: matterServerPort,
         path: matterPath,
         method: 'POST',
+        agent: agent,
         headers: {
             'Content-Type': 'application/json',
             'Content-Length': Buffer.byteLength(postData)
@@ -70,18 +99,6 @@ function postToServer(postContent, hookid, matterUrl) {
     };
     
     console.log(post_options);
-
-    var proto;
-    if(matterProto == 'https')
-    {
-        console.log("Using https protocol");
-        proto = https;
-    }
-    else
-    {
-        console.log("Using http protocol");
-        proto = http;
-    }
 
     try
     {
