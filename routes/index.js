@@ -39,7 +39,7 @@ function postToServer(postContent, hookid, matterUrl) {
     var matterServer = process.env.MATTERMOST_SERVER || 'localhost';
     var matterServerPort = process.env.MATTERMOST_SERVER_PORT;
     var matterProto = process.env.MATTERMOST_SERVER_PROTO || 'http';
-    var matterPath = process.env.MATTERMOST_SERVER_PATH || '/hooks/' + hookid;
+    var matterPath = (process.env.MATTERMOST_SERVER_PATH || '/hooks/') + hookid;
     var matterUsername = process.env.MATTERMOST_USERNAME || 'JIRA';
     var matterIconUrl = process.env.MATTERMOST_ICON_URL || 'https://design.atlassian.com/images/logo/favicon.png';
 
