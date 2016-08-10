@@ -1,0 +1,9 @@
+# Example docker-compose
+version: "2"
+
+services:
+  jira-matter-bridge:
+    image: vrenjith/jira-matter-bridge
+    environment:
+      MATTERMOST_SERVER: mattermost
+
