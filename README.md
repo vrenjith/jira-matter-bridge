@@ -15,6 +15,13 @@ Set the following environment variables to provide the Mattermost server details
 * Configure JIRA Webhooks to forward the hook (for the required JQL) to `http://<jira-matter-bridge-server>:3000/hooks/<mattermost hook id>`
 * That's it.
 
+## Docker Version
+Pull the image from Docker Hub and run a container:
+```sh
+docker run --rm -p 3000:3000 vrenjith/jira-matter-bridge
+```
+See also the example docker-compose.yml.
+
 ## Hosted Version
 
 * The app is hosted on a free dyno at https://jira-matter-bridge.herokuapp.com/
