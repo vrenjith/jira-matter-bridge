@@ -18,8 +18,16 @@ function doConversion(str)
     return toMarkdown(str);
 }
 
-function postToServer(postContent, hookid, matterUrl) {
-    console.log("Informing mattermost channel: " + hookid);
+function postToServer(postContent, hookid, channel, matterUrl) {
+    if(channel)
+    {
+        console.log("Informing mattermost channel: " + channel +
+            " with hookid: " + hookid);
+    }
+    else
+    {
+        console.log("Informing mattermost channel: " + hookid);
+    }
     process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
     var agent, httpsagent, httpagent = null;
@@ -83,9 +91,16 @@ function postToServer(postContent, hookid, matterUrl) {
         agent = httpagent;
     }
 
-    var postData = '{"text": ' + JSON.stringify(postContent) + ', "username": "' + matterUsername + '", "icon_url": "' + matterIconUrl + '"}';
+    var postData = '{"text": ' + JSON.stringify(postContent) +
+            ', "username": "' + matterUsername +
+            '", "icon_url": "' + matterIconUrl;
+    if(channel)
+    {
+        postData += '", "channel": "' + channel;
+    }
+    postData += '"}';
     console.log(postData);
-    
+
     var post_options = {
         host: matterServer,
         port: matterServerPort,
@@ -135,9 +150,10 @@ router.get('/hooks/:hookid', function(req, res, next) {
     });
 });
 
-router.post('/hooks/:hookid', function(req, res, next) {
+router.post('/hooks/:hookid/:channel?', function(req, res, next) {
     console.log("Received update from JIRA");
     var hookId = req.params.hookid;
+    var channel = req.params.channel;
     var webevent = req.body.webhookEvent;
     var issueID = req.body.issue.key;
     var issueRestUrl = req.body.issue.self;
@@ -195,7 +211,7 @@ router.post('/hooks/:hookid', function(req, res, next) {
         postContent += "\r\n##### Comment:\r\n" + doConversion(comment.body);
     }
 
-    postToServer(postContent, hookId, matterUrl);
+    postToServer(postContent, hookId, channel, matterUrl);
 
     res.render('index', {
         title: 'JIRA Mattermost Bridge - beauty, posted to JIRA'
