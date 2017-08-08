@@ -186,6 +186,9 @@ router.post('/hooks/:hookid/:channel?', function(req, res, next) {
     else
     {
         console.log("Ignoring events which we don't understand");
+        res.render('index', {
+            title: 'Ignoring events which we don\'t understand'
+        });
         return;
     }
 
