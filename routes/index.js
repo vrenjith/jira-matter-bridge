@@ -61,7 +61,7 @@ function postToServer(postContent, hookid, channel, matterUrl) {
             matterProto = murl.protocol.replace(":","") || matterProto;
             matterPath = murl.pathname || matterPath;
         }
-        catch(err){console.log(err)}
+        catch(err){console.log(err);}
     }
     //If the port is not initialized yet (neither from env, nor from query param)
     // use the defaults ports
@@ -112,7 +112,7 @@ function postToServer(postContent, hookid, channel, matterUrl) {
             'Content-Length': Buffer.byteLength(postData)
         }
     };
-    
+
     console.log(post_options);
 
     try
@@ -171,15 +171,15 @@ router.post('/hooks/:hookid/:channel?', function(req, res, next) {
 
     var postContent;
 
-    if (webevent == "jira:issue_updated") 
+    if (webevent == "jira:issue_updated")
     {
         postContent = "##### " + displayName + " updated [" + issueID + "](" + issueUrl + "): " + summary;
     }
-    else if(webevent == "jira:issue_created") 
+    else if(webevent == "jira:issue_created")
     {
         postContent = "##### " + displayName + " created [" + issueID + "](" + issueUrl + "): " + summary;
     }
-    else if(webevent == "jira:issue_deleted") 
+    else if(webevent == "jira:issue_deleted")
     {
         postContent = "##### " + displayName + " deleted [" + issueID + "](" + issueUrl + "): " + summary;
     }
