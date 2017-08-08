@@ -154,6 +154,7 @@ router.post('/hooks/:hookid/:channel?', function(req, res, next) {
     console.log("Received update from JIRA");
     var hookId = req.params.hookid;
     var channel = req.params.channel;
+
     var webevent = req.body.webhookEvent;
     var issueID = req.body.issue.key;
     var issueRestUrl = req.body.issue.self;
@@ -163,6 +164,8 @@ router.post('/hooks/:hookid/:channel?', function(req, res, next) {
     var summary = req.body.issue.fields.summary;
 
     var matterUrl = req.query.matterurl;
+    var track = req.query.track || "Status";
+    var trackedItems = track.split(",");
 
     var displayName = req.body.user.displayName;
     var avatar = req.body.user.avatarUrls["16x16"];
@@ -194,7 +197,22 @@ router.post('/hooks/:hookid/:channel?', function(req, res, next) {
 
     if(changeLog)
     {
-        var changedItems = req.body.changelog.items;
+        var changedItems = changeLog.items;
+
+        for (i = 0; i < changedItems.length; i++) {
+          if (trackedItems.indexOf(changedItems[i].field) != -1) {
+            break;
+          }
+          if (i+1 == changedItems.length) {
+            console.log("Ignoring events that are not being tracked. " +
+                        "Tracked events: " + track);
+            res.render("index", {
+                title: "Ignoring events that are not being tracked. " +
+                            "Tracked events: " + track
+            });
+            return;
+          }
+        }
 
         postContent += "\r\n| Field | Updated Value |\r\n|:----- |:-------------|\r\n";
 

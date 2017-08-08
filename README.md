@@ -13,8 +13,10 @@ Set the following environment variables to provide the Mattermost server details
 * Start the app by running `npm start`
 * Configure Mattermost server and create a new [incoming webhooks](https://github.com/mattermost/platform/blob/master/doc/integrations/webhooks/Incoming-Webhooks.md) and note the hook-id (the part that appears after `hooks` in the hook URL.
 * Configure JIRA Webhooks to forward the hook (for the required JQL) to the url `http://<jira-matter-bridge-server>:3000/hooks/<mattermost hook id>`
-* You can append `/<channel>` to that url to overwrite the default mattermost channel associated with the hook id. Messages will be posted tho this channel.
-* That's it.
+* You can append `/<channel>` to that url to overwrite the default mattermost channel associated with the hook id. Messages will be posted to this channel.
+* This integration supports the jira events `issue_created`, `issue_updated` and `issue_deleted`.
+* `issue_updated` events are only forwarded to mattermost when the `Status` of the issue has changed. You can specify which items are being tracked by appending the query parameter
+`track` denoting a comma separated list of events. For example `?track=Status,Assignee,Epic+Link`.
 
 ## Docker Version
 Pull the image from Docker Hub and run a container:
