@@ -12,7 +12,8 @@ Set the following environment variables to provide the Mattermost server details
 * Install the required modules by running `npm install`
 * Start the app by running `npm start`
 * Configure Mattermost server and create a new [incoming webhooks](https://github.com/mattermost/platform/blob/master/doc/integrations/webhooks/Incoming-Webhooks.md) and note the hook-id (the part that appears after `hooks` in the hook URL.
-* Configure JIRA Webhooks to forward the hook (for the required JQL) to `http://<jira-matter-bridge-server>:3000/hooks/<mattermost hook id>`
+* Configure JIRA Webhooks to forward the hook (for the required JQL) to the url `http://<jira-matter-bridge-server>:3000/hooks/<mattermost hook id>`
+* You can append `/<channel>` to that url to overwrite the default mattermost channel associated with the hook id. Messages will be posted tho this channel.
 * That's it.
 
 ## Docker Version
