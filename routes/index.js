@@ -139,6 +139,15 @@ router.post('/hooks/:hookid', function(req, res, next) {
     console.log("Received update from JIRA");
     var hookId = req.params.hookid;
     var webevent = req.body.webhookEvent;
+
+    if (!req.body.issue) {
+        console.log("Event (type " + webevent + ") has no issue. Probably a buggy comment notification from https://jira.atlassian.com/browse/JRASERVER-59980");
+        if (req.body.comment.self) {
+            console.log("...comment URL is " + req.body.comment.self);
+        }
+        return;
+    }
+
     var issueID = req.body.issue.key;
     var issueRestUrl = req.body.issue.self;
     var regExp = /(.*?)\/rest\/api\/.*/g;
