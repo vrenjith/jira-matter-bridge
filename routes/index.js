@@ -179,6 +179,8 @@ router.post('/hooks/:hookid/:channel?', function(req, res, next) {
     return;
   }
 
+  /* Only issue_updated events have change logs. If a comment was added to an
+  issue, the resulting issue_updated event does not have a change log. */
   if (changeLog) {
     var changedItems = changeLog.items;
 
