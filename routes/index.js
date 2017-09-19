@@ -173,7 +173,9 @@ router.post('/hooks/:hookid/:channel?', function(req, res, next) {
 
     var matterUrl = req.query.matterurl;
     var track = req.query.track || "status";
-    var trackedItems = track.split(",");
+    var trackedItems = track.split(",").map(function(item) {
+      return item.toLowerCase();
+    });
 
     var displayName = req.body.user.displayName;
     var avatar = req.body.user.avatarUrls["16x16"];
@@ -210,7 +212,7 @@ router.post('/hooks/:hookid/:channel?', function(req, res, next) {
         for (i = 0; i < changedItems.length; i++) {
           debugLog("Field of changeLog.items[" + i + "] == " +
                    changedItems[i].field);
-          if (trackedItems.indexOf(changedItems[i].field) != -1) {
+          if (trackedItems.indexOf(changedItems[i].field.toLowerCase()) != -1) {
             break;
           }
           if (i+1 == changedItems.length) {
