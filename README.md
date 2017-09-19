@@ -8,6 +8,9 @@ Set the following environment variables to provide the Mattermost server details
 * MATTERMOST_SERVER_PROTO - Default: http
 * MATTERMOST_SERVER - Default: localhost
 
+Set the following environment variable to enable debug log output:
+ * JIRA_MATTER_BRIDGE_DEBUG - Default: false
+
 ## Integration
 * Install the required modules by running `npm install`
 * Start the app by running `npm start`
