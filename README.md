@@ -20,6 +20,7 @@ Set the following environment variable to enable debug log output:
 * This integration supports the jira events `issue_created`, `issue_updated` and `issue_deleted`.
 * `issue_updated` events are only forwarded to mattermost when the `status` of the issue has changed. You can specify which items are being tracked by appending the query parameter
 `track` denoting a comma separated list of events. For example `?track=status,assignee,epic+link`.
+* As an exception to the last bullet point, `issue_updated` events are always forwarded if a comment was added to an issue.
 
 ## Docker Version
 Pull the image from Docker Hub and run a container:
