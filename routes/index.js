@@ -208,6 +208,8 @@ router.post('/hooks/:hookid/:channel?', function(req, res, next) {
         var changedItems = changeLog.items;
 
         for (i = 0; i < changedItems.length; i++) {
+          debugLog("Field of changeLog.items[" + i + "] == " +
+                   changedItems[i].field);
           if (trackedItems.indexOf(changedItems[i].field) != -1) {
             break;
           }
