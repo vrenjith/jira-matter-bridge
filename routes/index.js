@@ -14,12 +14,6 @@ function toTitleCase(str) {
     });
 }
 
-function doConversion(str)
-{
-    return toMarkdown(str);
-}
-
-
 function debugLog(str) {
   if(debug) {
     console.log(str);
@@ -235,13 +229,13 @@ router.post('/hooks/:hookid/:channel?', function(req, res, next) {
             if(!fieldValue){
                 fieldValue = "-Cleared-";
             }
-            postContent += "| " + toTitleCase(doConversion(fieldName)) + " | " + doConversion(fieldValue) + " |\r\n";
+            postContent += "| " + toTitleCase(toMarkdown(fieldName)) + " | " + toMarkdown(fieldValue) + " |\r\n";
         }
     }
 
     if(comment)
     {
-        postContent += "\r\n##### Comment:\r\n" + doConversion(comment.body);
+        postContent += "\r\n##### Comment:\r\n" + toMarkdown(comment.body);
     }
 
     postToServer(postContent, hookId, channel, matterUrl);
