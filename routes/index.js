@@ -172,7 +172,7 @@ router.post('/hooks/:hookid/:channel?', function(req, res, next) {
     var summary = req.body.issue.fields.summary;
 
     var matterUrl = req.query.matterurl;
-    var track = req.query.track || "Status";
+    var track = req.query.track || "status";
     var trackedItems = track.split(",");
 
     var displayName = req.body.user.displayName;

@@ -18,8 +18,8 @@ Set the following environment variable to enable debug log output:
 * Configure JIRA Webhooks to forward the hook (for the required JQL) to the url `http://<jira-matter-bridge-server>:3000/hooks/<mattermost hook id>`
 * You can append `/<channel>` to that url to overwrite the default mattermost channel associated with the hook id. Messages will be posted to this channel.
 * This integration supports the jira events `issue_created`, `issue_updated` and `issue_deleted`.
-* `issue_updated` events are only forwarded to mattermost when the `Status` of the issue has changed. You can specify which items are being tracked by appending the query parameter
-`track` denoting a comma separated list of events. For example `?track=Status,Assignee,Epic+Link`.
+* `issue_updated` events are only forwarded to mattermost when the `status` of the issue has changed. You can specify which items are being tracked by appending the query parameter
+`track` denoting a comma separated list of events. For example `?track=status,assignee,epic+link`.
 
 ## Docker Version
 Pull the image from Docker Hub and run a container:
