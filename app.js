@@ -32,6 +32,14 @@ app.use(function(req, res, next) {
 
 // error handlers
 
+app.use(function(err, req, res, next) {
+  console.error("App got error: " + err);
+  if (err.stack) {
+    console.error(err.stack);
+  }
+  next(err);
+});
+
 // development error handler
 // will print stacktrace
 if (app.get('env') === 'development') {
