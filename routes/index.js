@@ -6,6 +6,7 @@ var toMarkdown = require('to-markdown');
 var url = require('url');
 var HttpsProxyAgent = require('https-proxy-agent');
 var HttpProxyAgent = require('http-proxy-agent');
+var debug = process.env.JIRA_MATTER_BRIDGE_DEBUG;
 
 function toTitleCase(str) {
     return str.replace(/\w\S*/g, function(txt) {
@@ -13,13 +14,22 @@ function toTitleCase(str) {
     });
 }
 
-function doConversion(str)
-{
-    return toMarkdown(str);
+function debugLog(str) {
+  if(debug) {
+    console.log(str);
+  }
 }
 
-function postToServer(postContent, hookid, matterUrl) {
-    console.log("Informing mattermost channel: " + hookid);
+function postToServer(postContent, hookid, channel, matterUrl) {
+    if(channel)
+    {
+        debugLog("Informing mattermost channel: " + channel +
+            " with hookid: " + hookid);
+    }
+    else
+    {
+        debugLog("Informing mattermost channel: " + hookid);
+    }
     process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
     var agent, httpsagent, httpagent = null;
@@ -28,12 +38,12 @@ function postToServer(postContent, hookid, matterUrl) {
     if(https_proxy)
     {
         httpsagent = new HttpsProxyAgent(https_proxy);
-        console.log("Using HTTPS proxy - " + https_proxy);
+        debugLog("Using HTTPS proxy - " + https_proxy);
     }
     if(http_proxy)
     {
         httpagent = new HttpProxyAgent(http_proxy);
-        console.log("Using HTTP proxy - " + http_proxy);
+        debugLog("Using HTTP proxy - " + http_proxy);
     }
 
     var matterServer = process.env.MATTERMOST_SERVER || 'localhost';
@@ -53,7 +63,7 @@ function postToServer(postContent, hookid, matterUrl) {
             matterProto = murl.protocol.replace(":","") || matterProto;
             matterPath = murl.pathname || matterPath;
         }
-        catch(err){console.log(err)}
+        catch(err){debugLog(err);}
     }
     //If the port is not initialized yet (neither from env, nor from query param)
     // use the defaults ports
@@ -68,24 +78,31 @@ function postToServer(postContent, hookid, matterUrl) {
             matterServerPort = '80';
         }
     }
-    console.log(matterServer + "-" + matterServerPort  + "-" + matterProto);
+    debugLog(matterServer + "-" + matterServerPort  + "-" + matterProto);
     var proto;
     if(matterProto == 'https')
     {
-        console.log("Using https protocol");
+        debugLog("Using https protocol");
         proto = https;
         agent = httpsagent;
     }
     else
     {
-        console.log("Using http protocol");
+        debugLog("Using http protocol");
         proto = http;
         agent = httpagent;
     }
 
-    var postData = '{"text": ' + JSON.stringify(postContent) + ', "username": "' + matterUsername + '", "icon_url": "' + matterIconUrl + '"}';
-    console.log(postData);
-    
+    var postData = '{"text": ' + JSON.stringify(postContent) +
+            ', "username": "' + matterUsername +
+            '", "icon_url": "' + matterIconUrl;
+    if(channel)
+    {
+        postData += '", "channel": "' + channel;
+    }
+    postData += '"}';
+    debugLog(postData);
+
     var post_options = {
         host: matterServer,
         port: matterServerPort,
@@ -97,8 +114,8 @@ function postToServer(postContent, hookid, matterUrl) {
             'Content-Length': Buffer.byteLength(postData)
         }
     };
-    
-    console.log(post_options);
+
+    debugLog(post_options);
 
     try
     {
@@ -106,10 +123,10 @@ function postToServer(postContent, hookid, matterUrl) {
         var post_req = proto.request(post_options, function(res) {
             res.setEncoding('utf8');
             res.on('data', function(chunk) {
-                console.log('Response: ' + chunk);
+                debugLog('Response: ' + chunk);
             });
             res.on('error', function(err) {
-                console.log('Error: ' + err);
+                debugLog('Error: ' + err);
             });
         });
 
@@ -119,7 +136,7 @@ function postToServer(postContent, hookid, matterUrl) {
     }
     catch(err)
     {
-        console.log("Unable to reach mattermost server: " + err);
+        debugLog("Unable to reach mattermost server: " + err);
     }
 }
 
@@ -135,15 +152,17 @@ router.get('/hooks/:hookid', function(req, res, next) {
     });
 });
 
-router.post('/hooks/:hookid', function(req, res, next) {
-    console.log("Received update from JIRA");
+router.post('/hooks/:hookid/:channel?', function(req, res, next) {
+    debugLog("Received update from JIRA");
     var hookId = req.params.hookid;
+    var channel = req.params.channel;
+
     var webevent = req.body.webhookEvent;
 
     if (!req.body.issue) {
-        console.log("Event (type " + webevent + ") has no issue. Probably a buggy comment notification from https://jira.atlassian.com/browse/JRASERVER-59980");
+        debugLog("Event (type " + webevent + ") has no issue. Probably a buggy comment notification from https://jira.atlassian.com/browse/JRASERVER-59980");
         if (req.body.comment.self) {
-            console.log("...comment URL is " + req.body.comment.self);
+            debugLog("...comment URL is " + req.body.comment.self);
         }
         return;
     }
@@ -156,6 +175,10 @@ router.post('/hooks/:hookid', function(req, res, next) {
     var summary = req.body.issue.fields.summary;
 
     var matterUrl = req.query.matterurl;
+    var track = req.query.track || "status";
+    var trackedItems = track.split(",").map(function(item) {
+      return item.toLowerCase();
+    });
 
     var displayName = req.body.user.displayName;
     var avatar = req.body.user.avatarUrls["16x16"];
@@ -164,27 +187,49 @@ router.post('/hooks/:hookid', function(req, res, next) {
 
     var postContent;
 
-    if (webevent == "jira:issue_updated") 
+    if (webevent == "jira:issue_updated")
     {
         postContent = "##### " + displayName + " updated [" + issueID + "](" + issueUrl + "): " + summary;
     }
-    else if(webevent == "jira:issue_created") 
+    else if(webevent == "jira:issue_created")
     {
         postContent = "##### " + displayName + " created [" + issueID + "](" + issueUrl + "): " + summary;
     }
-    else if(webevent == "jira:issue_deleted") 
+    else if(webevent == "jira:issue_deleted")
     {
         postContent = "##### " + displayName + " deleted [" + issueID + "](" + issueUrl + "): " + summary;
     }
     else
     {
-        console.log("Ignoring events which we don't understand");
+        debugLog("Ignoring events which we don't understand");
+        res.render('index', {
+            title: 'Ignoring events which we don\'t understand'
+        });
         return;
     }
 
+    /* Only issue_updated events have change logs. If a comment was added to an
+    issue, the resulting issue_updated event does not have a change log. */
     if(changeLog)
     {
-        var changedItems = req.body.changelog.items;
+        var changedItems = changeLog.items;
+
+        for (i = 0; i < changedItems.length; i++) {
+          debugLog("Field of changeLog.items[" + i + "] == " +
+                   changedItems[i].field);
+          if (trackedItems.indexOf(changedItems[i].field.toLowerCase()) != -1) {
+            break;
+          }
+          if (i+1 == changedItems.length) {
+            debugLog("Ignoring events that are not being tracked. " +
+                        "Tracked events: " + track);
+            res.render("index", {
+                title: "Ignoring events that are not being tracked. " +
+                            "Tracked events: " + track
+            });
+            return;
+          }
+        }
 
         postContent += "\r\n| Field | Updated Value |\r\n|:----- |:-------------|\r\n";
 
@@ -195,16 +240,16 @@ router.post('/hooks/:hookid', function(req, res, next) {
             if(!fieldValue){
                 fieldValue = "-Cleared-";
             }
-            postContent += "| " + toTitleCase(doConversion(fieldName)) + " | " + doConversion(fieldValue) + " |\r\n";
+            postContent += "| " + toTitleCase(toMarkdown(fieldName)) + " | " + toMarkdown(fieldValue) + " |\r\n";
         }
     }
 
     if(comment)
     {
-        postContent += "\r\n##### Comment:\r\n" + doConversion(comment.body);
+        postContent += "\r\n##### Comment:\r\n" + toMarkdown(comment.body);
     }
 
-    postToServer(postContent, hookId, matterUrl);
+    postToServer(postContent, hookId, channel, matterUrl);
 
     res.render('index', {
         title: 'JIRA Mattermost Bridge - beauty, posted to JIRA'
